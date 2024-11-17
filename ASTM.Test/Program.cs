@@ -7,9 +7,14 @@ internal class Program
         // create ASTM instance
         // send ENQ frame
         // wait for ACK
-        var serial = new SerialConnection();
-
-        serial.Connect();
-        serial.SendData($"{5}");
+        var tcp = new TcpConnection();
+        tcp.Connect();
+        tcp.SendMessage("5");
+        while(true)
+        {
+            Thread.Sleep(1000);
+            var str = tcp.ReceiveMessage();
+            Console.WriteLine("Received Message: ", str);
+        }
     }
 }
