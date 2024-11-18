@@ -1,4 +1,5 @@
 ﻿using Connection;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -11,34 +12,47 @@ internal class Program
         // send ENQ frame
         // wait for ACK
         var port = 9000;
-        var address = IPAddress.Parse("127.0.0.1");
+        var address = IPAddress.Parse("192.168.10.100");
 
         try
         {
-            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            if(socket.Connected)
-            {
-                throw new Exception("socket is already connected");
-            }
-            socket.Connect("192.168.1.100", 80);
+            var listener = new TcpListener(address, port);
+            listener.Start();
 
-            if (socket.Connected) {
-                byte[] buffer = new byte[1024];
-                while(socket != null && socket.Connected)
+            byte[] buffer = new byte[1024];
+
+            while (true)
+            {
+                try
                 {
-                    if(socket.Available > 0)
+                    var client = listener.AcceptTcpClient();
+                    Console.WriteLine("new client");
+                    var socket = client.Client;
+                    var stream = client.GetStream();
+                    int readBytes = 0;
+
+                    while ((readBytes = stream.Read(buffer, 0, 1024)) > 0)
                     {
-                        int count = socket.Receive(buffer);
-                        var data = Encoding.ASCII.GetString(buffer, 0, 1024);
-                        Console.WriteLine(data);
-                        continue;
+                        var data = Encoding.ASCII.GetString(buffer, 0, readBytes);
+                        if (data.Contains("alive") && data.Length > 5)
+                        {
+                            Console.WriteLine("Heartbeat");
+                        }
                     }
 
-                    Task.Delay(5);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("error in accepting client: ", ex.ToString());
                 }
             }
 
-        } catch(Exception ex) { 
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error in starting listener: ", ex.ToString());
+        }
+
+
     }
 }
