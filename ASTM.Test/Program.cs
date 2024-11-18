@@ -9,7 +9,6 @@ internal class Program
         // create ASTM instance
         // send ENQ frame
         // wait for ACK
-
         var port = 9000;
         var address = IPAddress.Parse("127.0.0.1");
 
@@ -27,6 +26,5 @@ internal class Program
             }
         } catch(Exception ex) { 
         }
-        
     }
 }
