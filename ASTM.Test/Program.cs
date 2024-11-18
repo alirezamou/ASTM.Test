@@ -1,6 +1,7 @@
 ﻿using Connection;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 internal class Program
 {
@@ -14,16 +15,29 @@ internal class Program
 
         try
         {
-            var listener = new TcpListener(address, port);
-            listener.Start();
-
-            while (true)
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            if(socket.Connected)
             {
-                Console.Write("Waiting for a connection... ");
-
-                using TcpClient client = listener.AcceptTcpClient();
-                Console.WriteLine("Connected!");
+                throw new Exception("socket is already connected");
             }
+            socket.Connect("192.168.1.100", 80);
+
+            if (socket.Connected) {
+                byte[] buffer = new byte[1024];
+                while(socket != null && socket.Connected)
+                {
+                    if(socket.Available > 0)
+                    {
+                        int count = socket.Receive(buffer);
+                        var data = Encoding.ASCII.GetString(buffer, 0, 1024);
+                        Console.WriteLine(data);
+                        continue;
+                    }
+
+                    Task.Delay(5);
+                }
+            }
+
         } catch(Exception ex) { 
         }
     }
