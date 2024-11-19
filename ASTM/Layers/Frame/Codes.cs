@@ -1,4 +1,4 @@
-﻿namespace ASTM;
+﻿namespace ASTM.Layers.Frame;
 
 internal static class Codes
 {
