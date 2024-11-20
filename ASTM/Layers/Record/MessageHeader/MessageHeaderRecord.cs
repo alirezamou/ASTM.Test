@@ -10,19 +10,11 @@ public class MessageHeaderRecord : IRecord
 
     public string AccessPassword { get; set; } = string.Empty;
 
-    public CompositeField? SenderNameOrId { get; set; }
-
-    public string SenderStreetAddress { get; set; } = string.Empty;
-
-    public string ReservedField { get; set; } = string.Empty;
-
-    public string SenderTelephoneNumber { get; set; } = string.Empty;
-
-    public string CharacteristicsOfSender { get; set; } = string.Empty;
+    public SenderNameOrId? SenderNameOrId { get; set; }
 
     public string ReceiverId { get; set; } = string.Empty;
 
-    public string CommentOrSpecialInstructions { get; set; } = string.Empty;
+    public CommentOrSpecialInstruction? CommentOrSpecialInstructions { get; set; }
 
     public ProcessingIDEnum ProcessingId { get; set; }
 

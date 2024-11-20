@@ -1,19 +1,15 @@
-﻿namespace ASTM.Layers.Record.TestOrder;
+﻿using System.ComponentModel;
 
-public static class ReportTypes
-{
-    public static ReportTypesEnum TestOrderDownload { get; } = ReportTypesEnum.O;
-    public static ReportTypesEnum CommunicationOfResultUpload { get; } = ReportTypesEnum.F;
-}
+namespace ASTM.Layers.Record.TestOrder;
 
-public enum ReportTypesEnum { 
-    None,
-    /// <summary>
-    /// Download
-    /// </summary>
-    O,
-    /// <summary>
-    /// Upload
-    /// </summary>
-    F
+public enum ReportTypesEnum {
+
+    [Description("Q")]
+    ResponseToInquiryDownload,
+
+    [Description("Z")]
+    NoResponseRequestToInquiry,
+
+    [Description("O")]
+    Upload,
 }

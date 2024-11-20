@@ -1,19 +1,26 @@
-﻿namespace ASTM.Layers.Record.Result;
+﻿using System.ComponentModel;
 
-public static class ResultStatus {
-    public static ResultStatusEnum InitialResult { get; } = ResultStatusEnum.F;
-    public static ResultStatusEnum RerunResult { get; } = ResultStatusEnum.C;
-}
+namespace ASTM.Layers.Record.Result;
 
 public enum ResultStatusEnum
 {
     None,
-    /// <summary>
-    /// Initial Result
-    /// </summary>
-    F,
-    /// <summary>
-    /// Rerun result
-    /// </summary>
-    C
+
+    [Description("F")]
+    LastResult,
+
+    [Description("X")]
+    ResultsCannotBeDone,
+
+    [Description("R")]
+    ResultCommunicated,
+
+    [Description("V")]
+    ReleasedResultByUser,
+
+    [Description("Y")]
+    BlockedBySystem,
+
+    [Description("+")]
+    BlockedByUser,
 }

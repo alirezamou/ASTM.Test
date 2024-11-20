@@ -1,19 +1,24 @@
-﻿namespace ASTM.Layers.Record.MessageTermination;
+﻿using System.ComponentModel;
 
-public static class TerminationCode
-{
-    public static TerminationCodeEnum Normal { get; } = TerminationCodeEnum.N;
-    public static TerminationCodeEnum SystemError { get; } = TerminationCodeEnum.E;
-}
+namespace ASTM.Layers.Record.MessageTermination;
 
 public enum TerminationCodeEnum
 {
-    /// <summary>
-    /// Normal End
-    /// </summary>
-    N,
-    /// <summary>
-    /// System Error: Receiving Error, hardware error, application error
-    /// </summary>
-    E
+    [Description("F")]
+    InquiryNormalWithResponseData,
+
+    [Description("I")]
+    InquiryNormalWithoutResponseData,
+
+    [Description("Q")]
+    InquiryAbnormalAllDataInRecordIsNotDefined,
+
+    [Description("E")]
+    InquiryAbnormalSystemError,
+
+    [Description("E")]
+    ResponseUploadDownloadAbnormal,
+
+    [Description("E")]
+    InvalidRecord,
 }

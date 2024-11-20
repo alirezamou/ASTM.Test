@@ -8,7 +8,7 @@ public class CommentRecord
 
     public string CommentSource { get; set; } = string.Empty;
 
-    public CompositeField? CommentText { get; set; }
+    public CommentText? CommentText { get; set; }
 
     public string CommentType { get; set; } = string.Empty;
 }

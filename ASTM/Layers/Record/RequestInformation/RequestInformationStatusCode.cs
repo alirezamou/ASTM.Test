@@ -1,19 +1,12 @@
-﻿namespace ASTM.Layers.Record.RequestInformation;
+﻿using System.ComponentModel;
 
-public static class RequestInformationStatusCode
-{
-    public static readonly RequestInformationStatusCodeEnum CancelRequest = RequestInformationStatusCodeEnum.A;
-    public static readonly RequestInformationStatusCodeEnum OrderQuery = RequestInformationStatusCodeEnum.A;
-}
+namespace ASTM.Layers.Record.RequestInformation;
 
 public enum RequestInformationStatusCodeEnum
 {
-    /// <summary>
-    /// Cancel the last request (to host)
-    /// </summary>
-    A,
-    /// <summary>
-    /// Order Query (to host)
-    /// </summary>
-    O
+    [Description("O")]
+    OrderQuery,
+
+    [Description("A")]
+    CancelLastRequest,
 }

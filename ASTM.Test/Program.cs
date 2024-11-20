@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using ASTM.Layers.Record;
+
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -6,36 +8,44 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-        // create ASTM instance
-        // send ENQ frame
-        // wait for ACK
+        //var request = new RequestInformationRecord();
+        //var props = request.GetType().GetProperties();
+        //foreach ( var prop in props )
+        //{
+        //    Console.WriteLine("===========");
+        //    Console.WriteLine(prop.Name);
+        //    foreach (var attr in prop.GetCustomAttributes(false)) {
+        //        Console.WriteLine(attr.ToString());
+        //    }
+        //    Console.WriteLine("===========");
+        //}
 
 
-        var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        //var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-        try
-        {
-            Console.WriteLine("Connecting...");
-            socket.Connect("192.168.10.199", 23);
+        //try
+        //{
+        //    Console.WriteLine("Connecting...");
+        //    socket.Connect("192.168.10.199", 23);
 
-            if (socket.Connected) { 
+        //    if (socket.Connected) { 
 
-                var buffer = new byte[1024];
-                var readBytes = 0;
+        //        var buffer = new byte[1024];
+        //        var readBytes = 0;
 
-                while (socket != null && socket.Connected) {
-                    if(socket.Available > 0)
-                    {
-                        readBytes = socket.Receive(buffer);
-                        var data = Encoding.ASCII.GetString(buffer, 0, readBytes);
-                        Console.WriteLine("received data: " + data);
-                    }
-                }
-            }
-        }
-        catch (Exception ex) { 
-            Console.WriteLine("Error: " + ex.Message);
-        }
+        //        while (socket != null && socket.Connected) {
+        //            if(socket.Available > 0)
+        //            {
+        //                readBytes = socket.Receive(buffer);
+        //                var data = Encoding.ASCII.GetString(buffer, 0, readBytes);
+        //                Console.WriteLine("received data: " + data);
+        //            }
+        //        }
+        //    }
+        //}
+        //catch (Exception ex) { 
+        //    Console.WriteLine("Error: " + ex.Message);
+        //}
 
 
         /* server listening  */

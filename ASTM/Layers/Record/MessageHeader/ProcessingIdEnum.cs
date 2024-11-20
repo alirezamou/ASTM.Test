@@ -1,14 +1,9 @@
-﻿namespace ASTM.Layers.Record.MessageHeader;
+﻿using System.ComponentModel;
 
-public static class ProcessingID {
-    public static ProcessingIDEnum Production = ProcessingIDEnum.P;
-}
+namespace ASTM.Layers.Record.MessageHeader;
 
 public enum ProcessingIDEnum
 {
-    None,
-    /// <summary>
-    /// Production
-    /// </summary>
-    P
+    [Description("P")]
+    Production,
 }

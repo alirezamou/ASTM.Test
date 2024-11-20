@@ -6,10 +6,9 @@ public class RequestInformationRecord : IRecord
 
     public int SequenceNumber { get; set; }
 
-    public CompositeField? StartingRangeIDNumber { get; set; }
+    public StartingRangeIdNumber? StartingRangeIDNumber { get; set; }
 
     public UniversalTestIDEnum UniversalTestID { get; set; }
 
     public RequestInformationStatusCodeEnum RequestInformationStatusCode { get; set; }
-
 }

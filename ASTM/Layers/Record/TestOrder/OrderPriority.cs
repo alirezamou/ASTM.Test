@@ -1,20 +1,12 @@
-﻿namespace ASTM.Layers.Record.TestOrder;
+﻿using System.ComponentModel;
 
-public static class OrderPriority
-{
-    public static OrderPriorityEnum RoutineSample { get; } = OrderPriorityEnum.R;
-    public static OrderPriorityEnum StatSample { get; } = OrderPriorityEnum.S;
-}
+namespace ASTM.Layers.Record.TestOrder;
 
 public enum OrderPriorityEnum
 {
-    None,
-    /// <summary>
-    /// Routine Sample
-    /// </summary>
-    R,
-    /// <summary>
-    /// Stat sample
-    /// </summary>
-    S,
+    [Description("R")]
+    RoutineSample,
+
+    [Description("S")]
+    StatSample,
 }

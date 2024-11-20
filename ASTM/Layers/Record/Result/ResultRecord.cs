@@ -6,13 +6,13 @@ public class ResultRecord
 
     public int SequenceNumber { get; set; }
 
-    public CompositeField? UniversalTestID { get; set; }
+    public UniversalTestID? UniversalTestID { get; set; }
 
-    public CompositeField? DataOrMeasurmentValue { get; set; }
+    public DataOrMeasurmentValue? DataOrMeasurmentValue { get; set; }
 
     public string Units { get; set; } = string.Empty;
 
-    public CompositeField? ReferenceRanges { get; set; }
+    public ReferenceRange? ReferenceRanges { get; set; }
 
     public ResultAbnormalFlagsEnum ResultAbnormalFlags { get; set; }
 

@@ -2,8 +2,8 @@
 
 namespace ASTM.Layers.Record.RequestInformation;
 
-public enum UniversalTestIDEnum
+public enum SampleTypeEnum
 {
-    [Description("ALL")]
-    All,
+    [Description("SAMPLE")]
+    PatientSample,
 }
