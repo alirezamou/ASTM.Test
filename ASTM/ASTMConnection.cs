@@ -12,56 +12,123 @@ public class ASTMConnection
 
 	byte[] buffer = new byte[]
 		{
-			0x02, 0x31, 0x54, 0x65, 0x73, 0x74, 0x03, 0x44, 0x34, 0x0D, 0x0A
+			0x02, 0x01, 0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x17, 0xA5, 0xBC, 0x0D, 0x0A,
+			0x02, 0x02, 0x57, 0x6F, 0x72, 0x6C, 0x64, 0x17, 0xB6, 0xD7, 0x0D, 0x0A,
+			0x02, 0x03, 0x4F, 0x72, 0x74, 0x2D, 0x33, 0x03, 0xC5, 0xD1, 0x0D, 0x0A
 		};
 
 	private const int MinFrameLength = 7;
 
 	public event EventHandler<MessageReceivedEventArgs>? OnMessageReceived;
 
+	public ConnectionStatus Status { get; set; } = ConnectionStatus.Receiving;
+
+	private readonly IConnection _connection = null;
+
+	public ASTMConnection(IConnection connection)
+	{
+		_connection = connection;
+	}
+
 	public void DataReceived()
 	{
 		string data = Encoding.ASCII.GetString(buffer);
 
-		foreach (var ch in data)
+		if (data.Contains("alive") || string.IsNullOrWhiteSpace(data)) return;
+
+		switch (Status)
 		{
-			if (ch != 0) TempBuffer.Append(ch);
+			case ConnectionStatus.Receiving:
+				{
+					if (data[0] == Codes.ENQ)
+					{
+						Console.WriteLine("Received <ENQ>");
+						_connection.Write(Codes.NAK.ToString());
+						Console.WriteLine("Sending <NAK>");
+					}
 
-			if (ch == Codes.LF)
-			{
-				var frame = TempBuffer.ToString();
+					if (data[0] == Codes.EOT)
+						Status = ConnectionStatus.Idle;
+					else
+					{
+						foreach (var ch in data)
+						{
+							if (ch != 0) TempBuffer.Append(ch);
 
-				var isFrameValid = true;
+							if (ch == Codes.LF)
+							{
+								var frame = TempBuffer.ToString();
 
-				if (frame.Length < MinFrameLength) isFrameValid = false;
-				if (frame[0] != Codes.STX) isFrameValid = false;
-				if (frame[frame.Length - 1] != Codes.LF) isFrameValid = false;
-				if (frame[frame.Length - 2] != Codes.CR) isFrameValid = false;
+								var isFrameValid = true;
 
-				if (!isFrameValid) break;
+								if (frame.Length < MinFrameLength) isFrameValid = false;
+								if (frame[0] != Codes.STX) isFrameValid = false;
+								if (frame[frame.Length - 1] != Codes.LF) isFrameValid = false;
+								if (frame[frame.Length - 2] != Codes.CR) isFrameValid = false;
 
-				bool isValid = IsCheckSumValid(frame);
+								if (!isFrameValid)
+								{
+									Console.Error.WriteLine("Frame is not valid");
+									_connection.Write(Codes.NAK.ToString());
+								}
 
-				IsETB = frame[frame.Length - 5] == Codes.ETB;
+								bool isValid = IsCheckSumValid(frame);
 
-				var endTextIndex = frame.Length - 7;
+								if (!isValid)
+								{
+									Console.Error.WriteLine("Check sum is invalid");
+									_connection.Write(Codes.NAK.ToString());
+								}
 
-				var record = frame.Substring(2, endTextIndex);
+								_connection.Write(Codes.ACK.ToString());
 
-				Records.Add(record);
+								IsETB = frame[frame.Length - 5] == Codes.ETB;
 
-				if (!IsETB)
-					OnMessageReceived?.Invoke(this, new MessageReceivedEventArgs(record));
+								var endTextIndex = frame.Length - 7;
 
-				TempBuffer.Clear();
-				IsETB = false;
-			}
+								var record = frame.Substring(2, endTextIndex);
+
+								Records.Add(record);
+
+
+								if (!IsETB)
+								{
+									string text = "";
+									foreach (var r in Records) text += r;
+
+									OnMessageReceived?.Invoke(this, new MessageReceivedEventArgs(text));
+									Records.Clear();
+								}
+
+								TempBuffer.Clear();
+								IsETB = false;
+							}
+						}
+					}
+					break;
+				}
+			case ConnectionStatus.Idle:
+				{
+					if (data[0] == Codes.ENQ)
+					{
+						Console.WriteLine("Received <ENQ>");
+						Status = ConnectionStatus.Receiving;
+						_connection.Write(Codes.ACK.ToString());
+						Console.WriteLine("Sending <ACK>");
+					}
+					break;
+				}
+			default:
+				{
+					Console.WriteLine("Default case");
+					break;
+				}
 		}
+
 	}
 
 	private bool IsCheckSumValid(string frame)
 	{
-		/* from Frame number to ETX or ETB */
 		var chunk = frame.Substring(1, frame.Length - 5);
 		int sum = 0;
 
