@@ -1,6 +1,6 @@
 ﻿namespace ASTM.Layers.Record.Result;
 
-public class ResultRecord
+public class ResultRecord: IRecord
 {
     public char RecordTypeId { get; } = RecordType.Result;
 

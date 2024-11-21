@@ -2,11 +2,11 @@
 
 public static class RecordType
 {
-    public static readonly char MessageHeader = 'H';
-    public static readonly char MessageTermination = 'L';
-    public static readonly char RequestInformation = 'Q';
-    public static readonly char PatientInformation = 'P';
-    public static readonly char TestOrder = 'O';
-    public static readonly char Result = 'R';
-    public static readonly char Comment = 'C';
+    public const char MessageHeader = 'H';
+    public const char MessageTermination = 'L';
+    public const char RequestInformation = 'Q';
+    public const char PatientInformation = 'P';
+    public const char TestOrder = 'O';
+    public const char Result = 'R';
+    public const char Comment = 'C';
 }
