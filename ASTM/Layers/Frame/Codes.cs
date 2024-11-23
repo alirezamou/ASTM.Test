@@ -17,3 +17,5 @@ public static class Codes
     public static readonly byte CR = 0x0d;
     public static readonly byte LF = 0x0a;
 }
+
+
