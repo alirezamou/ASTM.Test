@@ -6,58 +6,77 @@ namespace Connection;
 
 public class TcpConnection
 {
-    // establish connection using port and ip
-    // connect
-    // disconnect
+	public string Host { get; private set; } = string.Empty;
+	public int Port { get; private set; }
 
-    // send data
-    // receive data
+	public TcpListener? _server { get; private set; }
+	public TcpClient? _client { get; private set; }
+	public Socket? _socket { get; private set; }
 
-    private TcpClient _client { get; set; }
-    private NetworkStream _stream {  get; set; }
-    private StreamReader _streamReader { get; set; }
-    private StreamWriter _streamWriter { get; set; }
-    private readonly string host = "127.0.0.1";
-    private readonly int port = 9000;
+	public event EventHandler<ConnectionHeartBeatEventArgs>? OnReceiveHeartBeat;
+	public event EventHandler<ConnectionDataReceivedEventArgs>? OnReceiveData;
 
-    public void Connect()
-    {
-        _client = new TcpClient(host, port);
-        _stream = _client.GetStream();
-        _streamReader = new StreamReader(_stream, Encoding.ASCII);
-        _streamWriter = new StreamWriter(_stream, Encoding.ASCII);
-    }
+	public TcpConnection(string host, int port)
+	{
+		Host = host;
+		Port = port;
+	}
 
-    public void SendMessage(string message)
-    {
-        try
-        {
-            _streamWriter.Write(message);
-            _streamWriter.Flush();
-        } catch(Exception e) 
-        {
-            Console.WriteLine("Error in sending message: ", e.Message);
-        }
-    }
+	public async Task StartServer()
+	{
+		try
+		{
+			var ipAddress = IPAddress.Parse(Host);
+			_server = new TcpListener(ipAddress, Port);
+			_server.Start();
+		}
+		catch (Exception ex)
+		{
+			{
+				Console.WriteLine("Error in starting server: " + ex.ToString());
+			}
 
-    public string ReceiveMessage()
-    {
-        try
-        {
-            return _streamReader.ReadLine();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine("Error in Receiving Message: ", e.Message);
-            return null;
-        }
-    }
+			var buffer = new byte[1024];
+			var readBytes = 0;
 
-    public void Close()
-    {
-        _streamReader.Close();
-        _streamWriter.Close();
-        _stream.Close();
-        _client.Close();
-    }
+			while (true)
+			{
+				try
+				{
+					_client = await _server.AcceptTcpClientAsync();
+					_socket = _client.Client;
+
+					var stream = _client.GetStream();
+					while ((readBytes = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+					{
+						var data = Encoding.UTF8.GetString(buffer, 0, readBytes);
+
+						if (data.Contains("alive"))
+						{
+							if (data.Length == 5)
+							{
+								this.OnReceiveHeartBeat?.Invoke(this, new ConnectionHeartBeatEventArgs(DateTime.Now.ToString()));
+								if (_socket == null) break;
+							}
+							else if (data.Length > 5)
+							{
+								data = data.Replace("alive", string.Empty);
+								this.OnReceiveData?.Invoke(this, new ConnectionDataReceivedEventArgs(data));
+							}
+						}
+						else
+						{
+							this.OnReceiveData?.Invoke(this, new ConnectionDataReceivedEventArgs(data));
+						}
+					}
+				}
+				catch { }
+			}
+		}
+	}
+	public void Write(string data)
+	{
+		var buffer = Encoding.UTF8.GetBytes(data);
+		_socket?.Send(buffer);
+	}
 }
