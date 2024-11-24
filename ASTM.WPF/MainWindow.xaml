@@ -1,0 +1,22 @@
+﻿<Window x:Class="ASTM.WPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ASTM.WPF"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Button Grid.Row="0" Content="Clear" HorizontalAlignment='Left' Width="150" Height="30" Click="ButtonClear_Click" />
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel  x:Name="LogsContainer" Margin="5">
+                <!--<TextBox IsReadOnly="True" BorderBrush="Transparent" Background="Transparent" Text="log" FontSize="16" />-->
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
