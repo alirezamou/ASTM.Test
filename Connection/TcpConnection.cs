@@ -29,48 +29,60 @@ public class TcpConnection
             var ipAddress = IPAddress.Parse(Host);
             _server = new TcpListener(ipAddress, Port);
             _server.Start();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error in starting server: " + ex.ToString());
-        }
 
-        var buffer = new byte[1024];
-        var readBytes = 0;
+            var buffer = new byte[1024];
+            var readBytes = 0;
 
-        while (true)
-        {
-            try
+            while (true)
             {
-                Console.WriteLine("Waiting for client...");
-                _client = await _server.AcceptTcpClientAsync();
-                _socket = _client.Client;
-
-                var stream = _client.GetStream();
-                while ((readBytes = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                try
                 {
-                    var data = Encoding.UTF8.GetString(buffer, 0, readBytes);
+                    Console.WriteLine("Waiting for client...");
+                    _client = await _server.AcceptTcpClientAsync();
+                    _socket = _client.Client;
 
-                    if (data.Contains("alive"))
+                    var stream = _client.GetStream();
+                    while ((readBytes = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                     {
-                        if (data.Length == 5)
+                        var data = Encoding.UTF8.GetString(buffer, 0, readBytes);
+
+                        if (data.Contains("alive"))
                         {
-                            this.OnReceiveHeartBeat?.Invoke(this, new ConnectionHeartBeatEventArgs(DateTime.Now.ToString()));
-                            if (_socket == null) break;
+                            if (data.Length == 5)
+                            {
+                                this.OnReceiveHeartBeat?.Invoke(this, new ConnectionHeartBeatEventArgs(DateTime.Now.ToString()));
+                                if (_socket == null) break;
+                            }
+                            else if (data.Length > 5)
+                            {
+                                data = data.Replace("alive", string.Empty);
+                                this.OnReceiveData?.Invoke(this, new ConnectionDataReceivedEventArgs(data));
+                            }
                         }
-                        else if (data.Length > 5)
+                        else
                         {
-                            data = data.Replace("alive", string.Empty);
                             this.OnReceiveData?.Invoke(this, new ConnectionDataReceivedEventArgs(data));
                         }
                     }
-                    else
-                    {
-                        this.OnReceiveData?.Invoke(this, new ConnectionDataReceivedEventArgs(data));
-                    }
+                }
+                catch (SocketException ex)
+                {
+                    Console.WriteLine("Socket Error: ", ex.ToString());
+                }
+                catch { }
+                finally
+                {
+                    _socket?.Dispose();
                 }
             }
-            catch { }
+        }
+        catch (SocketException ex)
+        {
+            Console.WriteLine("Socket Error: " + ex.ToString());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Unknown Error");
         }
     }
     public void Write(string data)
