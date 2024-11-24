@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASTM", "ASTM\ASTM.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Connection", "Connection\Connection.csproj", "{4CADE4B0-C626-4FCD-8C13-5BD5A35D4A1D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASTM.WPF", "ASTM.WPF\ASTM.WPF.csproj", "{19D06579-24A2-40EE-B9E0-5C9A5EF8147B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASTM.WPF", "ASTM.WPF\ASTM.WPF.csproj", "{19D06579-24A2-40EE-B9E0-5C9A5EF8147B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{BEFCDB99-1EDB-43C3-BF84-C4C115B09A1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{19D06579-24A2-40EE-B9E0-5C9A5EF8147B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19D06579-24A2-40EE-B9E0-5C9A5EF8147B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19D06579-24A2-40EE-B9E0-5C9A5EF8147B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEFCDB99-1EDB-43C3-BF84-C4C115B09A1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEFCDB99-1EDB-43C3-BF84-C4C115B09A1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEFCDB99-1EDB-43C3-BF84-C4C115B09A1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEFCDB99-1EDB-43C3-BF84-C4C115B09A1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

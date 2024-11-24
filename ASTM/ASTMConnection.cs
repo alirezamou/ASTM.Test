@@ -2,11 +2,14 @@
 using ASTM.Layers.Frame;
 using System.Globalization;
 using System.Text;
+using Shared;
 
 namespace ASTM;
 
 public class ASTMConnection
 {
+    private readonly ILogger _logger;
+
     public StringBuilder TempBuffer = new StringBuilder();
     public List<string> Records = new List<string>();
     public bool IsETB { get; set; } = false;
@@ -20,8 +23,10 @@ public class ASTMConnection
 
     public TcpConnection? _connection { get; private set; }
 
-    public ASTMConnection(TcpConnection connection)
+    public ASTMConnection(TcpConnection connection, ILogger logger)
     {
+        _logger = logger;
+
         _connection = connection;
         _connection.OnReceiveData += HandleReceiveData;
         _connection.OnReceiveHeartBeat += OnReceiveHeartBeat;
@@ -46,15 +51,15 @@ public class ASTMConnection
                     {
                         if (ch == CodesChar.ENQ)
                         {
-                            Console.WriteLine("Received <ENQ>");
-                            _connection.Write(Codes.NAK.ToString());
-                            Console.WriteLine("Sending <NAK>");
+                            _logger.Log("Received <ENQ>");
+                            _connection?.Write(Codes.NAK.ToString());
+                            _logger.Log("Sending <NAK>");
                             continue;
                         }
 
                         if (ch == CodesChar.EOT)
                         {
-                            Console.WriteLine("Received <EOT>");
+                            _logger.Log("Received <EOT>");
                             Status = ConnectionStatus.Idle;
                             TempBuffer.Clear();
                             Records.Clear();
@@ -76,13 +81,13 @@ public class ASTMConnection
                     {
                         if (ch == CodesChar.ENQ)
                         {
-                            Console.WriteLine("Received <ENQ>");
+                            _logger.Log("Received <ENQ>");
                             Status = ConnectionStatus.Receiving;
-                            _connection.Write(Codes.ACK.ToString());
-                            Console.WriteLine("Sending <ACK>");
+                            _connection?.Write(Codes.ACK.ToString());
+                            _logger.Log("Sending <ACK>");
                             continue;
                         }
-                        Console.WriteLine("Sending <NAK>");
+                        _logger.Log("Sending <NAK>");
                         _connection?.Write(Codes.NAK.ToString());
 
                         break;
@@ -93,7 +98,6 @@ public class ASTMConnection
                     }
                 default:
                     {
-                        Console.WriteLine("Default case");
                         break;
                     }
             }
@@ -112,23 +116,23 @@ public class ASTMConnection
 
         if (!isFrameValid)
         {
-            Console.Error.WriteLine("Frame is invalid");
-            _connection.Write(Codes.NAK.ToString());
+            _logger.Error("Frame is invalid");
+            _connection?.Write(Codes.NAK.ToString());
             return;
         }
 
         if (!IsCheckSumValid(frame))
         {
-            Console.Error.WriteLine("Check sum is invalid");
-            _connection.Write(Codes.NAK.ToString());
+            _logger.Error("Check sum is invalid");
+            _connection?.Write(Codes.NAK.ToString());
             return;
         }
 
-        _connection.Write(Codes.ACK.ToString());
+        _connection?.Write(Codes.ACK.ToString());
 
         IsETB = frame[frame.Length - 5] == CodesChar.ETB;
 
-        Console.WriteLine(">>>> frame: " + frame + " - " + (IsETB ? "ETB" : "ETX"));
+        _logger.Log(">>>> frame: " + frame + " - " + (IsETB ? "ETB" : "ETX"));
 
         var endTextIndex = frame.Length - 7;
 

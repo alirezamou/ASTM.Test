@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ASTM.WPF"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800"
+        WindowState="Maximized"
+        ShowInTaskbar="False">
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -13,10 +15,11 @@
         </Grid.RowDefinitions>
 
         <Button Grid.Row="0" Content="Clear" HorizontalAlignment='Left' Width="150" Height="30" Click="ButtonClear_Click" />
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel  x:Name="LogsContainer" Margin="5">
-                <!--<TextBox IsReadOnly="True" BorderBrush="Transparent" Background="Transparent" Text="log" FontSize="16" />-->
-            </StackPanel>
-        </ScrollViewer>
+        <Grid Grid.Row="1" Margin="0,5,0,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" BorderBrush="Gray">
+                <StackPanel  x:Name="LogsContainer" Margin="5">
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </Window>

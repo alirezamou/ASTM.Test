@@ -30,15 +30,16 @@ namespace ASTM.WPF
         {
             var host = "192.168.10.100";
             var port = 9000;
-            // TODO: add logger parameter to TcpConnectin and ASTMConnection ctors
             var tcpConnection = new TcpConnection(host, port, new Logger(LogsContainer));
             var astmConnection = new ASTMConnection(tcpConnection, new Logger(LogsContainer));
+
             await astmConnection.Connect();
         }
 
         private void ButtonClear_Click(object sender, RoutedEventArgs e)
         {
-
+            LogsContainer.Children.Clear();
+            LogsContainer.UpdateLayout();
         }
     }
 }

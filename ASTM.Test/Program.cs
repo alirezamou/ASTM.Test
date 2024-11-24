@@ -3,7 +3,7 @@ using Connection;
 
 internal class Program
 {
-    private async static Task Main(string[] args)
+    private void Main(string[] args)
     {
     }
 }

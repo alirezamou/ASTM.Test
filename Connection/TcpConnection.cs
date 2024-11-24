@@ -1,11 +1,14 @@
 ﻿using System.Net;
 using System.Text;
 using System.Net.Sockets;
+using Shared;
 
 namespace Connection;
 
 public class TcpConnection
 {
+    private readonly ILogger _logger;
+
     public string Host { get; private set; } = string.Empty;
     public int Port { get; private set; }
 
@@ -16,10 +19,12 @@ public class TcpConnection
     public event EventHandler<ConnectionHeartBeatEventArgs>? OnReceiveHeartBeat;
     public event EventHandler<ConnectionDataReceivedEventArgs>? OnReceiveData;
 
-    public TcpConnection(string host, int port)
+    public TcpConnection(string host, int port, ILogger logger)
     {
         Host = host;
         Port = port;
+
+        _logger = logger;
     }
 
     public async Task StartServer()
@@ -37,7 +42,7 @@ public class TcpConnection
             {
                 try
                 {
-                    Console.WriteLine("Waiting for client...");
+                    _logger.Log("Waiting for client...");
                     _client = await _server.AcceptTcpClientAsync();
                     _socket = _client.Client;
 
@@ -67,7 +72,7 @@ public class TcpConnection
                 }
                 catch (SocketException ex)
                 {
-                    Console.WriteLine("Socket Error: ", ex.ToString());
+                    _logger.Error("Socket Error: " + ex.ToString());
                 }
                 catch { }
                 finally
@@ -78,11 +83,11 @@ public class TcpConnection
         }
         catch (SocketException ex)
         {
-            Console.WriteLine("Socket Error: " + ex.ToString());
+            _logger.Error("Socket Error: " + ex.ToString());
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Unknown Error");
+            _logger.Error("Unknown Error");
         }
     }
     public void Write(string data)
