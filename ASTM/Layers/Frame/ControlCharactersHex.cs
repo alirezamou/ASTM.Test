@@ -1,6 +1,6 @@
 ﻿namespace ASTM.Layers.Frame;
 
-public static class Codes
+public static class ControlCharactersHex
 {
     public static readonly byte SOH = 0x01;
     public static readonly byte STX = 0x02;

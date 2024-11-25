@@ -8,166 +8,210 @@ namespace ASTM;
 
 public class ASTMConnection
 {
-    private readonly ILogger _logger;
+	private readonly ILogger _logger;
 
-    public StringBuilder TempBuffer = new StringBuilder();
-    public List<string> Records = new List<string>();
-    public bool IsETB { get; set; } = false;
+	public StringBuilder TempBuffer = new StringBuilder();
+	public List<string> Records = new List<string>();
+	public bool IsETB { get; set; } = false;
+	private const int MinFrameLength = 7;
 
-    private const int MinFrameLength = 7;
+	public System.Timers.Timer NextFrameTimer { get; set; }
+	public long NextFrameTimeoutCounter { get; set; } = 0;
 
-    public event EventHandler<MessageReceivedEventArgs>? OnMessageReceived;
-    public event EventHandler<ConnectionHeartBeatEventArgs>? OnReceiveHeartBeat;
+	public event EventHandler<MessageReceivedEventArgs>? OnMessageReceived;
+	public event EventHandler<ConnectionHeartBeatEventArgs>? OnReceiveHeartBeat;
 
-    public ConnectionStatus Status { get; set; } = ConnectionStatus.Idle;
 
-    public TcpConnection? _connection { get; private set; }
+	public ConnectionStatus Status { get; set; } = ConnectionStatus.Idle;
+	public TcpConnection? _connection { get; private set; }
 
-    public ASTMConnection(TcpConnection connection, ILogger logger)
-    {
-        _logger = logger;
+	public ASTMConnection(TcpConnection connection, ILogger logger)
+	{
+		_logger = logger;
 
-        _connection = connection;
-        _connection.OnReceiveData += HandleReceiveData;
-        _connection.OnReceiveHeartBeat += OnReceiveHeartBeat;
-    }
+		_connection = connection;
+		_connection.OnReceiveData += HandleReceiveData;
+		_connection.OnReceiveHeartBeat += OnReceiveHeartBeat;
 
-    public void HandleReceiveHeartBeat(object? sender, ConnectionHeartBeatEventArgs arg)
-    {
-        if (arg is not null) OnReceiveHeartBeat?.Invoke(this, arg);
-    }
+		NextFrameTimer = new System.Timers.Timer
+		{
+			Enabled = false,
+			Interval = 10000,
+		};
+		NextFrameTimer.Elapsed += NextFrameTimer_Elapsed;
+	}
 
-    public void HandleReceiveData(object? sender, ConnectionDataReceivedEventArgs arg)
-    {
-        var data = arg.data;
+	private void NextFrameTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+	{
+		_logger.Log("Timeout");
 
-        if (data.Contains("alive") || string.IsNullOrWhiteSpace(data)) return;
+		if (NextFrameTimeoutCounter > 6)
+		{
+			_logger.Log("Counter Limit hit 6");
+			_logger.Log("Set State to Idle");
 
-        foreach (var ch in data)
-        {
-            switch (Status)
-            {
-                case ConnectionStatus.Receiving:
-                    {
-                        if (ch == CodesChar.ENQ)
-                        {
-                            _logger.Log("Received <ENQ>");
-                            _connection?.Write(Codes.NAK.ToString());
-                            _logger.Log("Sending <NAK>");
-                            continue;
-                        }
+			Status = ConnectionStatus.Idle;
+			NextFrameTimeoutCounter = 0;
+			NextFrameTimer.Stop();
+			return;
+		}
+		NextFrameTimeoutCounter++;
 
-                        if (ch == CodesChar.EOT)
-                        {
-                            _logger.Log("Received <EOT>");
-                            Status = ConnectionStatus.Idle;
-                            TempBuffer.Clear();
-                            Records.Clear();
-                            IsETB = false;
+		_logger.Log("Sending <ACK>");
+		_connection?.Write(ControlCharactersHex.ACK.ToString());
+	}
 
-                            return;
-                        }
+	public void HandleReceiveHeartBeat(object? sender, ConnectionHeartBeatEventArgs arg)
+	{
+		if (arg is not null) OnReceiveHeartBeat?.Invoke(this, arg);
+	}
 
-                        if (ch != 0) TempBuffer.Append(ch);
+	public void HandleReceiveData(object? sender, ConnectionDataReceivedEventArgs arg)
+	{
+		var data = arg.data;
 
-                        if (ch == CodesChar.LF)
-                        {
-                            handleReceiveFrame(TempBuffer.ToString());
-                        }
+		if (data.Contains("alive") || string.IsNullOrWhiteSpace(data)) return;
 
-                        break;
-                    }
-                case ConnectionStatus.Idle:
-                    {
-                        if (ch == CodesChar.ENQ)
-                        {
-                            _logger.Log("Received <ENQ>");
-                            Status = ConnectionStatus.Receiving;
-                            _connection?.Write(Codes.ACK.ToString());
-                            _logger.Log("Sending <ACK>");
-                            continue;
-                        }
-                        _logger.Log("Sending <NAK>");
-                        _connection?.Write(Codes.NAK.ToString());
+		foreach (var ch in data)
+		{
+			switch (Status)
+			{
+				case ConnectionStatus.Receiving:
+					if (ch == ControlCharactersChar.ENQ)
+					{
+						try
+						{
+							_logger.Log("Received <ENQ>");
+							_connection?.Write(ControlCharactersHex.NAK.ToString());
+							_logger.Log("Sending <NAK>");
+							Status = ConnectionStatus.Idle;
+							NextFrameTimer.Stop();
+						}
+						catch { }
+						return;
+					}
 
-                        break;
-                    }
-                case ConnectionStatus.Establishing:
-                    {
-                        break;
-                    }
-                default:
-                    {
-                        break;
-                    }
-            }
-        }
-    }
+					if (ch == ControlCharactersChar.EOT)
+					{
+						_logger.Log("Received <EOT>");
+						Status = ConnectionStatus.Idle;
+						NextFrameTimer.Stop();
+						return;
+					}
 
-    public void handleReceiveFrame(string frame)
-    {
-        var isFrameValid = true;
+					if (ch != 0) TempBuffer.Append(ch);
 
-        if (string.IsNullOrWhiteSpace(frame)) isFrameValid = false;
-        if (frame.Length < MinFrameLength) isFrameValid = false;
-        if (frame[0] != CodesChar.STX) isFrameValid = false;
-        if (frame[frame.Length - 1] != Codes.LF) isFrameValid = false;
-        if (frame[frame.Length - 2] != Codes.CR) isFrameValid = false;
+					if (ch == ControlCharactersChar.LF)
+					{
+						handleReceiveFrame(TempBuffer.ToString());
+					}
 
-        if (!isFrameValid)
-        {
-            _logger.Error("Frame is invalid");
-            _connection?.Write(Codes.NAK.ToString());
-            return;
-        }
+					break;
+				case ConnectionStatus.Idle:
+					if (ch == ControlCharactersChar.ENQ)
+					{
+						_logger.Log("Received <ENQ>");
 
-        if (!IsCheckSumValid(frame))
-        {
-            _logger.Error("Check sum is invalid");
-            _connection?.Write(Codes.NAK.ToString());
-            return;
-        }
+						Status = ConnectionStatus.Receiving;
+						TempBuffer.Clear();
+						Records.Clear();
+						IsETB = false;
+						NextFrameTimeoutCounter = 0;
+						NextFrameTimer.Start();
 
-        _connection?.Write(Codes.ACK.ToString());
+						_logger.Log("Sending <ACK>");
+						_connection?.Write(ControlCharactersHex.ACK.ToString());
 
-        IsETB = frame[frame.Length - 5] == CodesChar.ETB;
+						return;
+					}
+					_logger.Log("Sending <NAK>");
+					_connection?.Write(ControlCharactersHex.NAK.ToString());
 
-        _logger.Log(">>>> frame: " + frame + " - " + (IsETB ? "ETB" : "ETX"));
+					break;
+				case ConnectionStatus.Establishing:
+					{
+						break;
+					}
+				default:
+					{
+						break;
+					}
+			}
+		}
+	}
 
-        var endTextIndex = frame.Length - 7;
+	public void handleReceiveFrame(string frame)
+	{
+		var isFrameValid = true;
 
-        var record = frame.Substring(2, endTextIndex);
+		if (string.IsNullOrWhiteSpace(frame)) isFrameValid = false;
+		if (frame.Length < MinFrameLength) isFrameValid = false;
+		if (frame[0] != ControlCharactersChar.STX) isFrameValid = false;
+		if (frame[frame.Length - 1] != ControlCharactersHex.LF) isFrameValid = false;
+		if (frame[frame.Length - 2] != ControlCharactersHex.CR) isFrameValid = false;
 
-        Records.Add(record);
+		if (!isFrameValid)
+		{
+			_logger.Error("Frame is invalid");
+			_connection?.Write(ControlCharactersHex.NAK.ToString());
+			NextFrameTimeoutCounter = 0;
+			NextFrameTimer.Stop();
+			NextFrameTimer.Start();
+			return;
+		}
 
-        if (!IsETB)
-        {
-            string text = "";
-            foreach (var r in Records) text += r;
+		if (!IsCheckSumValid(frame))
+		{
+			_logger.Error("Check sum is invalid");
+			_connection?.Write(ControlCharactersHex.NAK.ToString());
+			NextFrameTimer.Stop();
+			NextFrameTimer.Start();
+			return;
+		}
 
-            OnMessageReceived?.Invoke(this, new MessageReceivedEventArgs(text));
-            Records.Clear();
-        }
+		_connection?.Write(ControlCharactersHex.ACK.ToString());
+		NextFrameTimer.Stop();
+		NextFrameTimer.Start();
+		NextFrameTimeoutCounter = 0;
 
-        TempBuffer.Clear();
-        IsETB = false;
-    }
+		IsETB = frame[frame.Length - 5] == ControlCharactersChar.ETB;
 
-    private bool IsCheckSumValid(string frame)
-    {
-        var chunk = frame.Substring(1, frame.Length - 5);
-        int sum = 0;
+		_logger.Log(">>>> frame: " + frame + " - " + (IsETB ? "ETB" : "ETX"));
 
-        foreach (var ch in chunk)
-            sum += ch;
+		var endTextIndex = frame.Length - 7;
 
-        var hexStr = ((byte)(sum % 256)).ToString("X2", CultureInfo.InvariantCulture);
+		var record = frame.Substring(2, endTextIndex);
 
-        return hexStr == frame.Substring(frame.Length - 4, 2);
-    }
+		Records.Add(record);
 
-    public async Task Connect()
-    {
-        await _connection?.StartServer();
-    }
+		if (!IsETB)
+		{
+			string text = "";
+			foreach (var r in Records) text += r;
+
+			OnMessageReceived?.Invoke(this, new MessageReceivedEventArgs(text));
+			Records.Clear();
+		}
+
+		TempBuffer.Clear();
+		IsETB = false;
+	}
+
+	private bool IsCheckSumValid(string frame)
+	{
+		var chunk = frame.Substring(1, frame.Length - 5);
+		int sum = 0;
+
+		foreach (var ch in chunk)
+			sum += ch;
+
+		var hexStr = ((byte)(sum % 256)).ToString("X2", CultureInfo.InvariantCulture);
+
+		return hexStr == frame.Substring(frame.Length - 4, 2);
+	}
+
+	public async Task Connect()
+	{
+		await _connection?.StartServer();
+	}
 }

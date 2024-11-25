@@ -17,7 +17,7 @@ namespace ASTM.WPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        public Logger Logger { get; private set; }
+        public Logger? Logger { get; private set; }
 
         public MainWindow()
         {

@@ -1,6 +1,6 @@
 ﻿namespace ASTM.Layers.Frame;
 
-public static class CodesChar
+public static class ControlCharactersChar
 {
     public static readonly char SOH = '\u0001';
     public static readonly char STX = '\u0002';
